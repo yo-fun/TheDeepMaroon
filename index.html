@@ -193,7 +193,7 @@
 
   <script>
     // GANTI URL DI BAWAH INI DENGAN LINK GOOGLE APPS SCRIPT KAMU
-    const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzP5-f-iW7siBJCujXs2TtUe0G9ecJ7sRjIE96g-wmt3VGa_3oNGBTXg5lNppTYI4ud/exec';
+    const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzqsAygv6VZJpp-loU6VFXmJIHnaNwWZEmEsb-fEkdCCn4Ns9UtfqtqifJUMf8CVJXo/exec';
 
     const welcomeModal = document.getElementById('welcome-modal');
     const userForm = document.getElementById('user-form');
@@ -232,7 +232,7 @@
       welcomeModal.classList.add('hidden');
 
       // Kirim nama ke Google Sheets secara background
-      if (GOOGLE_SCRIPT_URL && GOOGLE_SCRIPT_URL !== 'https://script.google.com/macros/s/AKfycbzP5-f-iW7siBJCujXs2TtUe0G9ecJ7sRjIE96g-wmt3VGa_3oNGBTXg5lNppTYI4ud/exec') {
+      if (GOOGLE_SCRIPT_URL && GOOGLE_SCRIPT_URL !== 'https://script.google.com/macros/s/AKfycbzqsAygv6VZJpp-loU6VFXmJIHnaNwWZEmEsb-fEkdCCn4Ns9UtfqtqifJUMf8CVJXo/exec') {
         fetch(GOOGLE_SCRIPT_URL, {
           method: 'POST',
           mode: 'no-cors',
