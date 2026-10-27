@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aesthetic Web Photobooth</title>
+  <style>
+    :root {
+      --maroon: #800020;
+      --maroon-dark: #5C0017;
+      --bg-pink: #fcf0f2;
+      --text-main: #3A2D28;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: sans-serif; }
+    body { background-color: var(--maroon); color: #fff; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; position: relative; }
+    
+    /* MODAL OPENING / LAYAR WELCOME */
+    .welcome-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(92, 0, 23, 0.92);
+      backdrop-filter: blur(8px);
+      z-index: 999;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .welcome-card {
+      background: #ffffff;
+      color: var(--text-main);
+      padding: 35px 30px;
+      border-radius: 20px;
+      max-width: 420px;
+      width: 100%;
+      text-align: center;
+      border: 3px solid var(--maroon);
+      box-shadow: 0 15px 35px rgba(0,0,0,0.4);
+    }
+
+    .welcome-card h2 { color: var(--maroon); font-size: 1.8rem; margin-bottom: 8px; }
+    .welcome-card p { font-size: 0.95rem; color: #6C5B55; margin-bottom: 22px; }
+    
+    .input-group { margin-bottom: 20px; text-align: left; }
+    .input-group label { display: block; font-size: 0.85rem; font-weight: 700; color: var(--maroon); margin-bottom: 6px; }
+    .input-group input {
+      width: 100%;
+      padding: 12px 16px;
+      border: 2px solid var(--maroon);
+      border-radius: 10px;
+      font-size: 1rem;
+      outline: none;
+      transition: 0.2s;
+    }
+    .input-group input:focus { background: var(--bg-pink); }
+
+    /* Wadah Utama Photobooth */
+    .container { max-width: 950px; width: 100%; background: #fff; color: var(--text-main); padding: 30px; border-radius: 24px; border: 3px solid var(--maroon-dark); box-shadow: 0 12px 35px rgba(0,0,0,0.3); }
+    header { text-align: center; margin-bottom: 25px; }
+    header h1 { font-size: 2rem; color: var(--maroon); font-weight: 700; }
+    header p { color: #6C5B55; font-size: 0.95rem; margin-top: 4px; }
+    .user-greeting { display: inline-block; background: var(--bg-pink); padding: 4px 12px; border-radius: 20px; color: var(--maroon); font-weight: bold; font-size: 0.85rem; margin-top: 6px; }
+    
+    .photobooth-area { display: flex; gap: 30px; flex-wrap: wrap; justify-content: center; }
+    .camera-section { flex: 1; min-width: 320px; display: flex; flex-direction: column; align-items: center; }
+    
+    .video-wrapper { position: relative; width: 100%; max-width: 440px; aspect-ratio: 4/3; background: #2D221E; border-radius: 20px; overflow: hidden; border: 4px solid var(--maroon); box-shadow: 0 6px 20px rgba(128,0,32,0.3); }
+    #webcam { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
+    #countdown-overlay { position: absolute; inset: 0; background: rgba(128,0,32,0.85); color: #fff; font-size: 5.5rem; font-weight: 800; display: flex; justify-content: center; align-items: center; }
+    .hidden { display: none !important; }
+
+    .controls { width: 100%; max-width: 440px; margin-top: 18px; display: flex; flex-direction: column; gap: 14px; }
+    .filter-controls { display: flex; justify-content: space-between; align-items: center; background: var(--bg-pink); padding: 10px 16px; border-radius: 12px; border: 1px solid var(--maroon); }
+    .filter-controls label { font-size: 0.9rem; font-weight: 600; color: var(--maroon); }
+    select { padding: 8px 12px; border-radius: 8px; border: 1.5px solid var(--maroon); background: #fff; color: var(--text-main); font-size: 0.9rem; font-weight: 500; outline: none; cursor: pointer; }
+    
+    .btn { width: 100%; padding: 14px; border: none; border-radius: 12px; font-weight: 700; font-size: 1rem; cursor: pointer; }
+    .primary-btn { background: var(--maroon); color: #fff; }
+    .success-btn { background: var(--maroon-dark); color: #fff; margin-top: 15px; }
+    .btn:disabled { background: #E2DAC8; color: #9C9382; cursor: not-allowed; }
+
+    .preview-section { display: flex; flex-direction: column; align-items: center; }
+    .preview-section h3 { color: var(--maroon); margin-bottom: 12px; font-size: 1.1rem; }
+    .photostrip-frame { position: relative; width: 190px; background: #fff; padding: 16px 14px 12px 14px; border-radius: 12px; border: 2px solid var(--maroon); display: flex; flex-direction: column; gap: 12px; overflow: hidden; }
+    .frame-overlay { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10; object-fit: fill; }
+    
+    .slots-container { display: flex; flex-direction: column; gap: 12px; width: 100%; }
+    .photostrip-frame.layout-2x2 .slots-container { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .photo-slot { width: 100%; aspect-ratio: 4/3; background: var(--bg-pink); border: 1.5px dashed var(--maroon); border-radius: 6px; overflow: hidden; display: flex; justify-content: center; align-items: center; color: var(--maroon); font-size: 0.8rem; font-weight: 600; }
+    .photo-slot img { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
+
+    .strip-footer { text-align: center; padding-top: 4px; }
+    .brand-text { font-size: 0.65rem; letter-spacing: 1.5px; color: var(--maroon); font-weight: 700; }
+    .frame-carousel { display: flex; align-items: center; justify-content: space-between; width: 190px; margin-top: 10px; background: var(--bg-pink); border: 1px solid var(--maroon); border-radius: 8px; padding: 4px 8px; }
+    .nav-btn { background: var(--maroon); color: #fff; border: none; border-radius: 6px; padding: 4px 8px; cursor: pointer; font-size: 0.8rem; }
+    .nav-btn:hover { background: var(--maroon-dark); }
+    .frame-name { font-size: 0.75rem; font-weight: 700; color: var(--maroon); text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 110px; }
+  </style>
+</head>
+<body>
+
+  <!-- OPENING MODAL WELCOME -->
+  <div id="welcome-modal" class="welcome-overlay">
+    <div class="welcome-card">
+      <h2>Welcome!</h2>
+      <p>Masukkan nama kamu untuk memulai sesi foto aesthetic.</p>
+      <form id="user-form">
+        <div class="input-group">
+          <label for="user-name-input">Nama Pengguna:</label>
+          <input type="text" id="user-name-input" placeholder="Contoh: Yoyow" required autocomplete="off">
+        </div>
+        <button type="submit" class="btn primary-btn">📸 Masuk ke Photobooth</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- WADAH UTAMA PHOTOBOOTH -->
+  <div class="container">
+    <header>
+    <h1 style="display: flex; align-items: center; justify-content: center; gap: 10px;">
+    <!-- Icon Logo SVG Kamera KlikOpO -->
+    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect width="24" height="24" rx="6" fill="#800020"/>
+        <path d="M7 9C7 8.44772 7.44772 8 8 8H9.17071C9.43593 8 9.69027 7.89464 9.87785 7.70711L10.4142 7.17071C10.7893 6.79565 11.298 6.58579 11.8284 6.58579H12.1716C12.702 6.58579 13.2107 6.79565 13.5858 7.17071L14.1221 7.70711C14.3097 7.89464 14.5641 8 14.8293 8H16C16.5523 8 17 8.44772 17 9V16C17 16.5523 16.5523 17 16 17H7C6.44772 17 6 16.5523 6 16V9Z" stroke="#FCF0F2" stroke-width="1.5"/>
+        <circle cx="12" cy="12.5" r="2.5" stroke="#FCF0F2" stroke-width="1.5"/>
+    </svg>
+    <span>KlikOpO</span>
+    </h1>
+      <p>Abadikan momen aestheticmu!</p>
+      <div id="user-display" class="user-greeting hidden">Halo, <span id="user-name-span"></span>! 👋</div>
+    </header>
+
+    <main class="photobooth-area">
+      <section class="camera-section">
+        <div class="video-wrapper">
+          <video id="webcam" autoplay playsinline></video>
+          <div id="countdown-overlay" class="hidden">3</div>
+        </div>
+
+        <div class="controls">
+          <div class="filter-controls">
+            <label for="layout-select">Pilih Layout:</label>
+            <select id="layout-select">
+              <option value="3-vert">3 Foto Vertical</option>
+              <option value="4-vert">4 Foto Vertical</option>
+              <option value="2x2">4 Foto Grid (2x2)</option>
+              <option value="2-vert">2 Foto Vertical</option>
+              <option value="1-single">1 Foto Single</option>
+            </select>
+          </div>
+
+          <div class="filter-controls">
+            <label for="filter-select">Pilih Filter:</label>
+            <select id="filter-select">
+              <option value="none">Normal</option>
+              <option value="grayscale(100%)">B&W</option>
+              <option value="sepia(80%)">Sepia</option>
+              <option value="contrast(125%) brightness(110%)">Bright Pop</option>
+              <option value="brightness(110%) saturate(130%) sepia(20%)">Warm</option>
+              <option value="blur(0.5px) brightness(115%) contrast(90%)">Soft Glow</option>
+            </select>
+          </div>
+
+          <button id="start-btn" class="btn primary-btn">✨ Start Photo Session</button>
+        </div>
+      </section>
+
+      <section class="preview-section">
+        <h3>Hasil Photo Strip</h3>
+
+        <div id="photostrip" class="photostrip-frame layout-3-vert">
+          <img id="frame-preview" class="frame-overlay hidden" src="" alt="Frame Canva">
+          <div id="slots-container" class="slots-container"></div>
+          <div class="strip-footer">
+            <p class="brand-text">PHOTOBOOTH • <span id="current-date"></span></p>
+          </div>
+        </div>
+
+        <div class="frame-carousel">
+          <button id="prev-frame-btn" class="nav-btn" title="Frame Sebelumnya">◀</button>
+          <span id="frame-name-display" class="frame-name">Tanpa Frame</span>
+          <button id="next-frame-btn" class="nav-btn" title="Frame Selanjutnya">▶</button>
+        </div>
+
+        <button id="download-btn" class="btn success-btn" disabled>📥 Download Photo Strip</button>
+      </section>
+    </main>
+  </div>
+
+  <canvas id="hidden-canvas" style="display: none;"></canvas>
+
+  <script>
+    // GANTI URL DI BAWAH INI DENGAN LINK GOOGLE APPS SCRIPT KAMU
+    const GOOGLE_SCRIPT_URL = 'URL_GOOGLE_APPS_SCRIPT_KAMU';
+
+    const welcomeModal = document.getElementById('welcome-modal');
+    const userForm = document.getElementById('user-form');
+    const userNameInput = document.getElementById('user-name-input');
+    const userDisplay = document.getElementById('user-display');
+    const userNameSpan = document.getElementById('user-name-span');
+
+    const webcamElement = document.getElementById('webcam');
+    const filterSelect = document.getElementById('filter-select');
+    const layoutSelect = document.getElementById('layout-select');
+    const framePreview = document.getElementById('frame-preview');
+    const startBtn = document.getElementById('start-btn');
+    const downloadBtn = document.getElementById('download-btn');
+    const countdownOverlay = document.getElementById('countdown-overlay');
+    const currentDateSpan = document.getElementById('current-date');
+    const hiddenCanvas = document.getElementById('hidden-canvas');
+    const slotsContainer = document.getElementById('slots-container');
+    const photostripFrame = document.getElementById('photostrip');
+    const prevFrameBtn = document.getElementById('prev-frame-btn');
+    const nextFrameBtn = document.getElementById('next-frame-btn');
+    const frameNameDisplay = document.getElementById('frame-name-display');
+
+    let capturedPhotos = [];
+    let currentLayout = '3-vert';
+    let currentFrameIndex = 0;
+    let currentUser = '';
+
+    // Handle Form Submit Nama
+    userForm.addEventListener('submit', function(e) {
+      e.preventDefault();
+      currentUser = userNameInput.value.trim();
+      if (!currentUser) return;
+
+      userNameSpan.textContent = currentUser;
+      userDisplay.classList.remove('hidden');
+      welcomeModal.classList.add('hidden');
+
+      // Kirim nama ke Google Sheets secara background
+      if (GOOGLE_SCRIPT_URL && GOOGLE_SCRIPT_URL !== 'https://script.google.com/macros/s/AKfycbzP5-f-iW7siBJCujXs2TtUe0G9ecJ7sRjIE96g-wmt3VGa_3oNGBTXg5lNppTYI4ud/exec') {
+        fetch(GOOGLE_SCRIPT_URL, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ nama: currentUser })
+        }).catch(err => console.log('Spreadsheet log failed:', err));
+      }
+
+      // Aktifkan Webcam
+      initWebcam();
+    });
+
+    const FRAME_DATABASE = {
+      '3-vert': [{ name: 'Tanpa Frame', file: 'none' }, { name: '3V Vintage', file: 'frame-3vert-vintage.png' }, { name: '3V Vintage 1', file: 'frame-3vert-vintage1.png' }, { name: '3V Vintage 2', file: 'frame-3vert-vintage2.png' }, { name: '3V Floral', file: 'frame-3vert-floral.png' }, { name: '3V Cute', file: 'frame-3vert-cute.png' }],
+      '4-vert': [{ name: 'Tanpa Frame', file: 'none' }, { name: '4V Vintage', file: 'frame-4vert-vintage.png' }, { name: '4V Floral', file: 'frame-4vert-floral.png' }, { name: '4V Minimalis', file: 'frame-4vert-minimalis.png' }],
+      '2x2':    [{ name: 'Tanpa Frame', file: 'none' }, { name: 'Grid Vintage', file: 'frame-2x2-vintage.png' }, { name: 'Grid Cute', file: 'frame-2x2-cute.png' }, { name: 'Grid Cute 1', file: 'frame-2x2-cute1.png' }, { name: 'Grid Cute 2', file: 'frame-2x2-cute2.png' }, { name: 'Grid Cute 3', file: 'frame-2x2-cute3.png' }],
+      '2-vert': [{ name: 'Tanpa Frame', file: 'none' }, { name: '2V Vintage', file: 'frame-2vert-vintage.png' }, { name: '2V Retro', file: 'frame-2vert-retro.png' }],
+      '1-single':[{ name: 'Tanpa Frame', file: 'none' }, { name: 'Single Cute', file: 'frame-1single-cute.png' }, { name: 'Single Cute 1', file: 'frame-1single-cute1.png' }, { name: 'Single Cute 2', file: 'frame-1single-cute2.png' }, { name: 'Single Cute 3', file: 'frame-1single-cute3.png' }]
+    };
+
+    const LAYOUT_CONFIGS = {
+      '1-single': { totalPhotos: 1, cols: 1 },
+      '2-vert':   { totalPhotos: 2, cols: 1 },
+      '3-vert':   { totalPhotos: 3, cols: 1 },
+      '4-vert':   { totalPhotos: 4, cols: 1 },
+      '2x2':      { totalPhotos: 4, cols: 2 }
+    };
+
+    currentDateSpan.textContent = new Date().toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: '2-digit' });
+
+    function updateFrameDisplay() {
+      const framesList = FRAME_DATABASE[currentLayout] || [{ name: 'Tanpa Frame', file: 'none' }];
+      const currentFrame = framesList[currentFrameIndex];
+      frameNameDisplay.textContent = currentFrame.name;
+      if (currentFrame.file !== 'none') {
+        framePreview.src = currentFrame.file;
+        framePreview.classList.remove('hidden');
+      } else {
+        framePreview.classList.add('hidden');
+      }
+    }
+
+    function changeFrame(step) {
+      const framesList = FRAME_DATABASE[currentLayout];
+      currentFrameIndex = (currentFrameIndex + step + framesList.length) % framesList.length;
+      updateFrameDisplay();
+    }
+
+    prevFrameBtn.addEventListener('click', () => changeFrame(-1));
+    nextFrameBtn.addEventListener('click', () => changeFrame(1));
+
+    function renderSlots() {
+      currentLayout = layoutSelect.value;
+      const config = LAYOUT_CONFIGS[currentLayout];
+      photostripFrame.className = `photostrip-frame layout-${currentLayout}`;
+      slotsContainer.innerHTML = '';
+      capturedPhotos = [];
+      currentFrameIndex = 0;
+      downloadBtn.disabled = true;
+
+      for (let i = 1; i <= config.totalPhotos; i++) {
+        const slot = document.createElement('div');
+        slot.className = 'photo-slot';
+        slot.id = `slot-${i}`;
+        slot.innerHTML = `<span>Foto ${i}</span>`;
+        slotsContainer.appendChild(slot);
+      }
+      updateFrameDisplay();
+    }
+
+    renderSlots();
+    layoutSelect.addEventListener('change', renderSlots);
+
+    async function initWebcam() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 1280, height: 960 }, audio: false });
+        webcamElement.srcObject = stream;
+      } catch (err) {
+        alert("Gagal membuka kamera!");
+      }
+    }
+
+    filterSelect.addEventListener('change', (e) => webcamElement.style.filter = e.target.value);
+
+    startBtn.addEventListener('click', async function() {
+      const config = LAYOUT_CONFIGS[currentLayout];
+      startBtn.disabled = downloadBtn.disabled = layoutSelect.disabled = true;
+      capturedPhotos = [];
+
+      for (let i = 1; i <= config.totalPhotos; i++) {
+        document.getElementById(`slot-${i}`).innerHTML = `<span>Foto ${i}</span>`;
+      }
+
+      for (let i = 1; i <= config.totalPhotos; i++) {
+        await runCountdown(3);
+        captureToSlot(i);
+        await new Promise(r => setTimeout(r, 800));
+      }
+
+      startBtn.disabled = downloadBtn.disabled = layoutSelect.disabled = false;
+    });
+
+    function runCountdown(seconds) {
+      return new Promise(function(resolve) {
+        countdownOverlay.classList.remove('hidden');
+        let count = seconds;
+        countdownOverlay.textContent = count;
+        const interval = setInterval(() => {
+          count--;
+          if (count > 0) {
+            countdownOverlay.textContent = count;
+          } else {
+            clearInterval(interval);
+            countdownOverlay.classList.add('hidden');
+            resolve();
+          }
+        }, 1000);
+      });
+    }
+
+    function captureToSlot(slotIndex) {
+      const canvas = document.createElement('canvas');
+      canvas.width = webcamElement.videoWidth || 640;
+      canvas.height = webcamElement.videoHeight || 480;
+      const ctx = canvas.getContext('2d');
+      ctx.translate(canvas.width, 0);
+      ctx.scale(-1, 1);
+      ctx.filter = webcamElement.style.filter || 'none';
+      ctx.drawImage(webcamElement, 0, 0, canvas.width, canvas.height);
+
+      const dataUrl = canvas.toDataURL('image/png');
+      capturedPhotos.push(dataUrl);
+      document.getElementById(`slot-${slotIndex}`).innerHTML = `<img src="${dataUrl}" />`;
+    }
+
+    downloadBtn.addEventListener('click', function() {
+      const config = LAYOUT_CONFIGS[currentLayout];
+      if (capturedPhotos.length < config.totalPhotos) return;
+
+      const cols = config.cols;
+      const rows = Math.ceil(config.totalPhotos / cols);
+      const stripWidth = 600, padding = 35, gap = 20;
+      const photoWidth = (stripWidth - (padding * 2) - (gap * (cols - 1))) / cols;
+      const photoHeight = photoWidth * (3 / 4);
+      const footerHeight = 80;
+      const stripHeight = (padding * 2) + (rows * photoHeight) + ((rows - 1) * gap) + footerHeight;
+
+      hiddenCanvas.width = stripWidth;
+      hiddenCanvas.height = stripHeight;
+      const ctx = hiddenCanvas.getContext('2d');
+
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, stripWidth, stripHeight);
+
+      const loadImagesPromises = capturedPhotos.map(photoSrc => {
+        return new Promise(resolve => {
+          const img = new Image();
+          img.onload = () => resolve(img);
+          img.src = photoSrc;
+        });
+      });
+
+      const selectedFrameFile = FRAME_DATABASE[currentLayout][currentFrameIndex].file;
+
+      Promise.all(loadImagesPromises).then(images => {
+        images.forEach((img, index) => {
+          const col = index % cols, row = Math.floor(index / cols);
+          const xPos = padding + col * (photoWidth + gap);
+          const yPos = padding + row * (photoHeight + gap);
+
+          const imgAspect = img.width / img.height;
+          const targetAspect = photoWidth / photoHeight;
+          let sx = 0, sy = 0, sWidth = img.width, sHeight = img.height;
+
+          if (imgAspect > targetAspect) {
+            sWidth = img.height * targetAspect;
+            sx = (img.width - sWidth) / 2;
+          } else {
+            sHeight = img.width / targetAspect;
+            sy = (img.height - sHeight) / 2;
+          }
+
+          ctx.drawImage(img, sx, sy, sWidth, sHeight, xPos, yPos, photoWidth, photoHeight);
+        });
+
+        ctx.fillStyle = '#800020';
+        ctx.font = 'bold 24px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(`PHOTOBOOTH • ${currentDateSpan.textContent}`, stripWidth / 2, stripHeight - 35);
+
+        if (selectedFrameFile !== 'none') {
+          const frameImg = new Image();
+          frameImg.onload = () => { ctx.drawImage(frameImg, 0, 0, stripWidth, stripHeight); eksekusiDownload(); };
+          frameImg.onerror = () => eksekusiDownload();
+          frameImg.src = selectedFrameFile;
+        } else {
+          eksekusiDownload();
+        }
+      });
+
+      function eksekusiDownload() {
+        const link = document.createElement('a');
+        link.download = `photostrip-${currentLayout}.png`;
+        link.href = hiddenCanvas.toDataURL('image/png');
+        link.click();
+      }
+    });
+  </script>
+</body>
+</html>
