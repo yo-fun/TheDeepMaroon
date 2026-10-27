@@ -233,7 +233,7 @@
 
       // Kirim nama ke Google Sheets secara background
       if (GOOGLE_SCRIPT_URL) {
-        fetch(${GOOGLE_SCRIPT_URL}?nama=${encodeURIComponent(currentUser)})
+        fetch(${GOOGLE_SCRIPT_URL}?nama=${encodeURIComponent(currentUser)}')
           .catch(err => console.log('Spreadsheet log failed:', err));
       }
 
